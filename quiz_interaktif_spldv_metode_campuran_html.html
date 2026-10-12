@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif SPLDV - Metode Campuran (Eliminasi & Substitusi)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MathJax for rendering LaTeX math equations cleanly -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Google Fonts Inter & Kalam -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-handwriting { font-family: 'Kalam', cursive; }
+        .paper-card {
+            background-color: #fdf4ff;
+            background-image: radial-gradient(#e879f9 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+    </style>
+</head>
+<body class="bg-fuchsia-50/60 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-fuchsia-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-fuchsia-600 rounded-xl shadow-md shadow-fuchsia-600/20 text-white">
+                    <i class="fa-solid fa-calculator text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-fuchsia-950 flex items-center gap-2">
+                        Kuis Interaktif SPLDV: Metode Campuran
+                    </h1>
+                    <p class="text-xs text-fuchsia-700/80">15 Soal Latihan (Eliminasi dilanjut Substitusi)</p>
+                </div>
+            </div>
+
+            <!-- Quiz Status Scoreboard -->
+            <div class="flex items-center gap-3 bg-fuchsia-100/80 px-4 py-2 rounded-xl border border-fuchsia-300 text-xs sm:text-sm">
+                <div class="flex items-center gap-1.5 font-semibold text-slate-700">
+                    <i class="fa-solid fa-list-check text-fuchsia-600"></i>
+                    <span>Terjawab: <b id="answered-count" class="text-fuchsia-950">0</b>/15</span>
+                </div>
+                <div class="h-4 w-px bg-fuchsia-300"></div>
+                <div class="flex items-center gap-1.5 font-semibold text-emerald-700">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>Skor: <b id="score-count" class="text-emerald-800 font-mono text-base">0</b></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Question Navigation Matrix Card -->
+        <section class="bg-white border border-fuchsia-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-fuchsia-100 pb-3">
+                <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-fuchsia-950">
+                    <i class="fa-solid fa-grip text-fuchsia-600"></i> Navigasi Nomor Soal
+                </div>
+                
+                <!-- Category Filters -->
+                <div class="flex items-center gap-1 text-xs">
+                    <button onclick="filterCategory('all')" id="filter-all" class="px-2.5 py-1 rounded-lg bg-fuchsia-600 text-white font-medium shadow-sm">Semua (15)</button>
+                    <button onclick="filterCategory('direct')" id="filter-direct" class="px-2.5 py-1 rounded-lg bg-fuchsia-100 text-fuchsia-950 hover:bg-fuchsia-200 font-medium">Soal Langsung (1-8)</button>
+                    <button onclick="filterCategory('story')" id="filter-story" class="px-2.5 py-1 rounded-lg bg-fuchsia-100 text-fuchsia-950 hover:bg-fuchsia-200 font-medium">Soal Cerita (9-15)</button>
+                </div>
+            </div>
+
+            <!-- 15 Number Grid Buttons -->
+            <div id="nav-grid" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-15 gap-2">
+                <!-- Javascript will inject 1 to 15 buttons here -->
+            </div>
+
+            <div class="flex items-center justify-between pt-1 text-xs text-slate-500 border-t border-fuchsia-100">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> Belum</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Benar</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span> Kurang Tepat</span>
+                </div>
+                <button onclick="resetQuiz()" class="text-rose-600 hover:text-rose-800 font-medium flex items-center gap-1 transition">
+                    <i class="fa-solid fa-rotate-left"></i> Riset Kuis
+                </button>
+            </div>
+        </section>
+
+        <!-- Active Question Display Card -->
+        <section id="question-card" class="bg-white border border-fuchsia-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
+            <!-- Dynamic Question Content -->
+        </section>
+
+        <!-- Bottom Prev / Next Navigation -->
+        <div class="flex items-center justify-between gap-4">
+            <button id="btn-prev" onclick="prevQuestion()" class="px-5 py-2.5 bg-white border border-fuchsia-300 hover:bg-fuchsia-50 text-fuchsia-950 font-bold rounded-xl shadow-sm transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+            </button>
+            <span id="question-indicator" class="text-xs sm:text-sm font-semibold text-fuchsia-950 bg-fuchsia-100 px-3 py-1.5 rounded-lg border border-fuchsia-200">
+                Soal 1 dari 15
+            </span>
+            <button id="btn-next" onclick="nextQuestion()" class="px-5 py-2.5 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold rounded-xl shadow-md shadow-fuchsia-600/20 transition flex items-center gap-2">
+                Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // 15 Complete SPLDV Mixed Method Questions Data (Elimination + Substitution)
+        const quizData = [
+            // DIRECT ALGEBRAIC PROBLEMS (1 - 8)
+            {
+                id: 1,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 1',
+                question: 'Tentukan himpunan penyelesaian dari sistem persamaan berikut:\n$$x + y = 5$$\n$$x - y = 1$$',
+                options: [
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 4 dan y = 1',
+                    'x = 1 dan y = 4'
+                ],
+                correct: 1, // B
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan menjumlahkan kedua persamaan:',
+                step1_sub_eq: '(x + y = 5) + (x - y = 1) \\implies 2x = 6',
+                step1_calc1: 'x = \\frac{6}{2}',
+                step1_calc2: 'x = 3',
+                step1_res: 'x = 3',
+
+                step2_title: 'Langkah 2: Substitusikan nilai $x = 3$ ke persamaan $x + y = 5$:',
+                step2_sub_eq: '3 + y = 5',
+                step2_calc1: 'y = 5 - 3',
+                step2_res: 'y = 2',
+                final_res: 'x = 3 dan y = 2'
+            },
+            {
+                id: 2,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 2',
+                question: 'Tentukan nilai $x$ dan $y$ yang memenuhi sistem persamaan:\n$$2x + y = 7$$\n$$x + y = 4$$',
+                options: [
+                    'x = 1 dan y = 3',
+                    'x = 2 dan y = 2',
+                    'x = 3 dan y = 1',
+                    'x = 4 dan y = 0'
+                ],
+                correct: 2, // C
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan persamaan (1) dan (2):',
+                step1_sub_eq: '(2x + y = 7) - (x + y = 4)',
+                step1_calc1: '2x - x + (y - y) = 7 - 4',
+                step1_calc2: 'x = 3',
+                step1_res: 'x = 3',
+
+                step2_title: 'Langkah 2: Substitusikan nilai $x = 3$ ke persamaan $x + y = 4$:',
+                step2_sub_eq: '3 + y = 4',
+                step2_calc1: 'y = 4 - 3',
+                step2_res: 'y = 1',
+                final_res: 'x = 3 dan y = 1'
+            },
+            {
+                id: 3,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 3',
+                question: 'Carilah penyelesaian dari sistem persamaan:\n$$3x + y = 10$$\n$$x + y = 6$$',
+                options: [
+                    'x = 2 dan y = 4',
+                    'x = 3 dan y = 3',
+                    'x = 4 dan y = 2',
+                    'x = 1 dan y = 5'
+                ],
+                correct: 0, // A
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(3x + y = 10) - (x + y = 6)',
+                step1_calc1: '2x = 4',
+                step1_calc2: 'x = 2',
+                step1_res: 'x = 2',
+
+                step2_title: 'Langkah 2: Substitusikan nilai $x = 2$ ke persamaan $x + y = 6$:',
+                step2_sub_eq: '2 + y = 6',
+                step2_calc1: 'y = 6 - 2',
+                step2_res: 'y = 4',
+                final_res: 'x = 2 dan y = 4'
+            },
+            {
+                id: 4,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 4',
+                question: 'Tentukan nilai $x$ dan $y$ dari sistem persamaan:\n$$2x + 3y = 13$$\n$$x + 3y = 10$$',
+                options: [
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 1 dan y = 4',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 1, // B
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(2x + 3y = 13) - (x + 3y = 10)',
+                step1_calc1: 'x = 3',
+                step1_calc2: 'Diperoleh langsung nilai $x = 3$.',
+                step1_res: 'x = 3',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 3$ ke persamaan $x + 3y = 10$:',
+                step2_sub_eq: '3 + 3y = 10 \\implies 3y = 7 \\text{ (salah, cek ulang)}$$',
+                // Let's check correct substitution: if x=3, 3+3y=10 -> 3y=7 (fraction). Let's fix option or equation so x=3, y=2:
+                // If x=3, y=2 -> x+3y = 3 + 3(2) = 9 != 10. Let's make eq 2: x + 3y = 9. Then x=3, 3+3y=9 -> 3y=6 -> y=2. Let's update Q4 eq 2.
+                question: 'Tentukan nilai $x$ dan $y$ dari sistem persamaan:\n$$2x + 3y = 12$$\n$$x + 3y = 9$$',
+                options: [
+                    'x = 2 dan y = 2',
+                    'x = 3 dan y = 2',
+                    'x = 1 dan y = 3',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 1, // B
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(2x + 3y = 12) - (x + 3y = 9)',
+                step1_calc1: 'x = 3',
+                step1_calc2: 'Diperoleh nilai $x = 3$.',
+                step1_res: 'x = 3',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 3$ ke persamaan $x + 3y = 9$:',
+                step2_sub_eq: '3 + 3y = 9',
+                step2_calc1: '3y = 6 \\implies y = 2',
+                step2_res: 'y = 2',
+                final_res: 'x = 3 dan y = 2'
+            },
+            {
+                id: 5,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 5',
+                question: 'Selesaikan sistem persamaan berikut:\n$$x + 2y = 8$$\n$$x + y = 5$$',
+                options: [
+                    'x = 1 dan y = 3',
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 1, // B -> if x=2, y=3: 2 + 6 = 8. 2 + 3 = 5.
+                step1_title: 'Langkah 1: Eliminasi variabel $x$ dengan mengurangkan persamaan (1) dan (2):',
+                step1_sub_eq: '(x + 2y = 8) - (x + y = 5)',
+                step1_calc1: 'y = 3',
+                step1_calc2: 'Diperoleh langsung nilai $y = 3$.',
+                step1_res: 'y = 3',
+
+                step2_title: 'Langkah 2: Substitusikan $y = 3$ ke persamaan $x + y = 5$:',
+                step2_sub_eq: 'x + 3 = 5',
+                step2_calc1: 'x = 5 - 3',
+                step2_res: 'x = 2',
+                final_res: 'x = 2 dan y = 3'
+            },
+            {
+                id: 6,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 6',
+                question: 'Tentukan nilai $x$ dan $y$ yang memenuhi:\n$$2x + y = 8$$\n$$x + y = 5$$',
+                options: [
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 1 dan y = 4',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 1, // B -> if x=3, y=2: 2(3) + 2 = 8. 3 + 2 = 5.
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(2x + y = 8) - (x + y = 5)',
+                step1_calc1: 'x = 3',
+                step1_calc2: 'Diperoleh nilai $x = 3$.',
+                step1_res: 'x = 3',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 3$ ke persamaan $x + y = 5$:',
+                step2_sub_eq: '3 + y = 5',
+                step2_calc1: 'y = 5 - 3',
+                step2_res: 'y = 2',
+                final_res: 'x = 3 dan y = 2'
+            },
+            {
+                id: 7,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 7',
+                question: 'Selesaikan sistem persamaan berikut dengan metode campuran:\n$$3x + 2y = 12$$\n$$x + 2y = 8$$',
+                options: [
+                    'x = 1 dan y = 3',
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 4 dan y = 0'
+                ],
+                correct: 1, // B -> if x=2, y=3: 3(2) + 2(3) = 6 + 6 = 12. 2 + 2(3) = 2 + 6 = 8.
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(3x + 2y = 12) - (x + 2y = 8)',
+                step1_calc1: '2x = 4',
+                step1_calc2: 'x = 2',
+                step1_res: 'x = 2',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 2$ ke persamaan $x + 2y = 8$:',
+                step2_sub_eq: '2 + 2y = 8 \\implies 2y = 6',
+                step2_calc1: 'y = 3',
+                step2_res: 'y = 3',
+                final_res: 'x = 2 dan y = 3'
+            },
+            {
+                id: 8,
+                type: 'direct',
+                category: 'Soal Langsung',
+                title: 'Soal 8',
+                question: 'Tentukan himpunan penyelesaian dari:\n$$2x + 3y = 11$$\n$$2x + y = 7$$',
+                options: [
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 1 dan y = 3',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 0, // A -> if x=2, y=3: 2(2) + 3(3) = 4 + 9 = 13 != 11. Wait! Let's check: 2(2) + 3(2) = 10.
+                // Let's test x=2, y=2 in 2x+3y=11 -> 4+6=10. Let's make eq 1: 2x + 3y = 10? Or let's test x=1, y=3: 2(1)+3(3) = 11. And 2(1)+3 = 5 != 7.
+                // Let's test x=2, y=something: let's use x=2, y=1: 2(2)+3(1) = 7. And 2(2)+1 = 5.
+                // Let's use clean equations for Q8: 2x + 3y = 13 and 2x + y = 7.
+                // Elimination: (2x + 3y = 13) - (2x + y = 7) => 2y = 6 => y = 3.
+                // Substitution: 2x + 3 = 7 => 2x = 4 => x = 2.
+                // Let's update Q8 question text to match: 2x + 3y = 13 and 2x + y = 7.
+                question: 'Tentukan himpunan penyelesaian dari:\n$$2x + 3y = 13$$\n$$2x + y = 7$$',
+                options: [
+                    'x = 2 dan y = 3',
+                    'x = 3 dan y = 2',
+                    'x = 1 dan y = 4',
+                    'x = 4 dan y = 1'
+                ],
+                correct: 0, // A
+                step1_title: 'Langkah 1: Eliminasi variabel $x$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(2x + 3y = 13) - (2x + y = 7)',
+                step1_calc1: '2y = 6 \\implies y = 3',
+                step1_calc2: 'Diperoleh nilai $y = 3$.',
+                step1_res: 'y = 3',
+
+                step2_title: 'Langkah 2: Substitusikan $y = 3$ ke persamaan $2x + y = 7$:',
+                step2_sub_eq: '2x + 3 = 7 \\implies 2x = 4',
+                step2_calc1: 'x = 2',
+                step2_res: 'x = 2',
+                final_res: 'x = 2 dan y = 3'
+            },
+
+            // WORD PROBLEMS / SOAL CERITA (9 - 15)
+            {
+                id: 9,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 9',
+                question: 'Di sebuah toko, harga $2\\text{ buku}$ dan $1\\text{ pensil}$ adalah $\\text{Rp } 8.000,00$, sedangkan harga $1\\text{ buku}$ dan $1\\text{ pensil}$ adalah $\\text{Rp } 5.000,00$. Berapakah harga $1\\text{ buku}$ ($x$) dan $1\\text{ pensil}$ ($y$)?',
+                options: [
+                    'Buku = Rp 2.000,00 dan Pensil = Rp 3.000,00',
+                    'Buku = Rp 3.000,00 dan Pensil = Rp 2.000,00',
+                    'Buku = Rp 4.000,00 dan Pensil = Rp 1.000,00',
+                    'Buku = Rp 3.500,00 dan Pensil = Rp 1.500,00'
+                ],
+                correct: 1, // B -> if Buku=3000, Pensil=2000: 2(3000)+2000 = 8000. 3000+2000 = 5000.
+                story_context: 'Model Matematika:\n(1) 2x + y = 8.000\n(2) x + y = 5.000',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan persamaan (1) dan (2):',
+                step1_sub_eq: '(2x + y = 8.000) - (x + y = 5.000)',
+                step1_calc1: 'x = 3.000',
+                step1_calc2: 'Diperoleh harga 1 buku = Rp 3.000,00.',
+                step1_res: 'x = 3.000',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 3.000$ ke persamaan $x + y = 5.000$:',
+                step2_sub_eq: '3.000 + y = 5.000',
+                step2_calc1: 'y = 5.000 - 3.000 = 2.000',
+                step2_res: 'y = 2.000',
+                final_res: 'Buku = Rp 3.000,00 dan Pensil = Rp 2.000,00'
+            },
+            {
+                id: 10,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 10',
+                question: 'Ibu membeli $3\\text{ kg jeruk}$ dan $1\\text{ kg apel}$ seharga $\\text{Rp } 70.000,00$. Di toko yang sama, Ibu membeli $1\\text{ kg jeruk}$ dan $1\\text{ kg apel}$ seharga $\\text{Rp } 30.000,00$. Berapakah harga $1\\text{ kg jeruk}$ ($x$) dan $1\\text{ kg apel}$ ($y$)?',
+                options: [
+                    'Jeruk = Rp 15.000,00 dan Apel = Rp 15.000,00',
+                    'Jeruk = Rp 20.000,00 dan Apel = Rp 10.000,00',
+                    'Jeruk = Rp 25.000,00 dan Apel = Rp 5.000,00',
+                    'Jeruk = Rp 18.000,00 dan Apel = Rp 12.000,00'
+                ],
+                correct: 1, // B -> if Jeruk=20k, Apel=10k: 3(20k)+10k = 70k. 20k+10k = 30k.
+                story_context: 'Model Matematika:\n(1) 3x + y = 70.000\n(2) x + y = 30.000',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(3x + y = 70.000) - (x + y = 30.000)',
+                step1_calc1: '2x = 40.000 \\implies x = 20.000',
+                step1_calc2: 'Harga 1 kg jeruk = Rp 20.000,00.',
+                step1_res: 'x = 20.000',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 20.000$ ke persamaan $x + y = 30.000$:',
+                step2_sub_eq: '20.000 + y = 30.000',
+                step2_calc1: 'y = 30.000 - 20.000 = 10.000',
+                step2_res: 'y = 10.000',
+                final_res: 'Jeruk = Rp 20.000,00 dan Apel = Rp 10.000,00'
+            },
+            {
+                id: 11,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 11',
+                question: 'Keliling sebuah lapangan persegi panjang adalah $36\\text{ meter}$. Jika panjangnya ($x$) ditambah lebarnya ($y$) adalah $18\\text{ meter}$, dan selisih panjang dan lebar adalah $4\\text{ meter}$ ($x - y = 4$), tentukan ukuran panjang dan lebar lapangan tersebut!',
+                options: [
+                    'Panjang = 10 m dan Lebar = 8 m',
+                    'Panjang = 11 m dan Lebar = 7 m',
+                    'Panjang = 12 m dan Lebar = 6 m',
+                    'Panjang = 9 m dan Lebar = 9 m'
+                ],
+                correct: 1, // B -> if P=11, L=7: P+L=18. P-L=4.
+                story_context: 'Model Matematika:\n(1) x + y = 18\n(2) x - y = 4',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan menjumlahkan kedua persamaan:',
+                step1_sub_eq: '(x + y = 18) + (x - y = 4) \\implies 2x = 22',
+                step1_calc1: 'x = \\frac{22}{2} = 11',
+                step1_calc2: 'Panjang = 11 meter.',
+                step1_res: 'x = 11',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 11$ ke persamaan $x + y = 18$:',
+                step2_sub_eq: '11 + y = 18',
+                step2_calc1: 'y = 18 - 11 = 7',
+                step2_res: 'y = 7',
+                final_res: 'Panjang = 11 m dan Lebar = 7 m'
+            },
+            {
+                id: 12,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 12',
+                question: 'Jumlah umur Kakak ($x$) dan Adik ($y$) adalah $20\\text{ tahun}$. Selisih umur mereka adalah $4\\text{ tahun}$ ($x - y = 4$). Berapakah umur Kakak dan Adik sekarang?',
+                options: [
+                    'Kakak = 11 tahun dan Adik = 9 tahun',
+                    'Kakak = 12 tahun dan Adik = 8 tahun',
+                    'Kakak = 13 tahun dan Adik = 7 tahun',
+                    'Kakak = 10 tahun dan Adik = 10 tahun'
+                ],
+                correct: 1, // B -> if Kakak=12, Adik=8: 12+8=20. 12-8=4.
+                story_context: 'Model Matematika:\n(1) x + y = 20\n(2) x - y = 4',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan menjumlahkan kedua persamaan:',
+                step1_sub_eq: '(x + y = 20) + (x - y = 4) \\implies 2x = 24',
+                step1_calc1: 'x = 12',
+                step1_calc2: 'Umur Kakak = 12 tahun.',
+                step1_res: 'x = 12',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 12$ ke persamaan $x + y = 20$:',
+                step2_sub_eq: '12 + y = 20',
+                step2_calc1: 'y = 20 - 12 = 8',
+                step2_res: 'y = 8',
+                final_res: 'Kakak = 12 tahun dan Adik = 8 tahun'
+            },
+            {
+                id: 13,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 13',
+                question: 'Di tempat parkir terdapat total $10\\text{ kendaraan}$ yang terdiri dari mobil ($x$) dan sepeda motor ($y$). Jumlah roda seluruh kendaraan tersebut adalah $32\\text{ buah}$ ($4x + 2y = 32$). Berapakah banyak mobil dan sepeda motor?',
+                options: [
+                    'Mobil = 5 dan Motor = 5',
+                    'Mobil = 6 dan Motor = 4',
+                    'Mobil = 4 dan Motor = 6',
+                    'Mobil = 7 dan Motor = 3'
+                ],
+                correct: 1, // B -> if Mobil=6, Motor=4: 6+4=10. 4(6)+2(4) = 24+8 = 32.
+                story_context: 'Model Matematika:\n(1) x + y = 10\n(2) 4x + 2y = 32 (atau disederhanakan 2x + y = 16)',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan $2x + y = 16$ dan $x + y = 10$:',
+                step1_sub_eq: '(2x + y = 16) - (x + y = 10)',
+                step1_calc1: 'x = 6',
+                step1_calc2: 'Banyak mobil = 6.',
+                step1_res: 'x = 6',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 6$ ke persamaan $x + y = 10$:',
+                step2_sub_eq: '6 + y = 10',
+                step2_calc1: 'y = 10 - 6 = 4',
+                step2_res: 'y = 4',
+                final_res: 'Mobil = 6 dan Motor = 4'
+            },
+            {
+                id: 14,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 14',
+                question: 'Harga $2\\text{ kaos}$ dan $1\\text{ celana}$ adalah $\\text{Rp } 250.000,00$. Harga $1\\text{ kaos}$ dan $1\\text{ celana}$ adalah $\\text{Rp } 175.000,00$. Berapakah harga $1\\text{ kaos}$ ($x$) dan $1\\text{ celana}$ ($y$)?',
+                options: [
+                    'Kaos = Rp 75.000,00 dan Celana = Rp 100.000,00',
+                    'Kaos = Rp 80.000,00 dan Celana = Rp 95.000,00',
+                    'Kaos = Rp 70.000,00 dan Celana = Rp 105.000,00',
+                    'Kaos = Rp 85.000,00 dan Celana = Rp 90.000,00'
+                ],
+                correct: 0, // A -> if Kaos=75k, Celana=100k: 2(75k)+100k = 250k. 75k+100k = 175k.
+                story_context: 'Model Matematika:\n(1) 2x + y = 250.000\n(2) x + y = 175.000',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan mengurangkan kedua persamaan:',
+                step1_sub_eq: '(2x + y = 250.000) - (x + y = 175.000)',
+                step1_calc1: 'x = 75.000',
+                step1_calc2: 'Harga 1 kaos = Rp 75.000,00.',
+                step1_res: 'x = 75.000',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 75.000$ ke persamaan $x + y = 175.000$:',
+                step2_sub_eq: '75.000 + y = 175.000',
+                step2_calc1: 'y = 175.000 - 75.000 = 100.000',
+                step2_res: 'y = 100.000',
+                final_res: 'Kaos = Rp 75.000,00 dan Celana = Rp 100.000,00'
+            },
+            {
+                id: 15,
+                type: 'story',
+                category: 'Soal Cerita',
+                title: 'Soal 15',
+                question: 'Jumlah dua bilangan adalah $30$, sedangkan selisih kedua bilangan tersebut adalah $10$ ($x - y = 10$). Tentukan kedua bilangan tersebut ($x$ dan $y$)!',
+                options: [
+                    '18 dan 12',
+                    '19 dan 11',
+                    '20 dan 10',
+                    '21 dan 9'
+                ],
+                correct: 2, // C -> if 20 and 10: sum = 30, diff = 10.
+                story_context: 'Model Matematika:\n(1) x + y = 30\n(2) x - y = 10',
+                step1_title: 'Langkah 1: Eliminasi variabel $y$ dengan menjumlahkan kedua persamaan:',
+                step1_sub_eq: '(x + y = 30) + (x - y = 10) \\implies 2x = 40',
+                step1_calc1: 'x = 20',
+                step1_calc2: 'Bilangan pertama = 20.',
+                step1_res: 'x = 20',
+
+                step2_title: 'Langkah 2: Substitusikan $x = 20$ ke persamaan $x + y = 30$:',
+                step2_sub_eq: '20 + y = 30',
+                step2_calc1: 'y = 30 - 20 = 10',
+                step2_res: 'y = 10',
+                final_res: 'Kedua bilangan tersebut adalah 20 dan 10'
+            }
+        ];
+
+        // App State
+        let currentIdx = 0;
+        let userAnswers = {}; // { qId: selectedOptionIndex }
+        let currentFilter = 'all';
+
+        // LocalStorage keys
+        const STORAGE_KEY = 'spldv_mixed_method_quiz_state_v1';
+
+        // Load saved state from localStorage (Anti-reload / Offline protection)
+        function loadSavedState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    userAnswers = parsed.userAnswers || {};
+                    if (typeof parsed.currentIdx === 'number' && parsed.currentIdx >= 0 && parsed.currentIdx < 15) {
+                        currentIdx = parsed.currentIdx;
+                    }
+                }
+            } catch (e) {
+                console.warn('LocalStorage error:', e);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    userAnswers: userAnswers,
+                    currentIdx: currentIdx
+                }));
+            } catch (e) {
+                console.warn('LocalStorage save error:', e);
+            }
+        }
+
+        function resetQuiz() {
+            if (confirm('Apakah Anda yakin ingin mengulang kuis dari awal? Semua jawaban Anda akan dihapus.')) {
+                userAnswers = {};
+                currentIdx = 0;
+                localStorage.removeItem(STORAGE_KEY);
+                renderAll();
+            }
+        }
+
+        // Render Navigation Grid
+        function renderNavGrid() {
+            const gridEl = document.getElementById('nav-grid');
+            gridEl.innerHTML = '';
+
+            quizData.forEach((q, idx) => {
+                // Check category filter
+                if (currentFilter === 'direct' && q.type !== 'direct') return;
+                if (currentFilter === 'story' && q.type !== 'story') return;
+
+                const btn = document.createElement('button');
+                btn.className = `h-10 rounded-xl font-bold text-xs sm:text-sm flex flex-col items-center justify-center transition-all relative border`;
+
+                const isCurrent = (idx === currentIdx);
+                const hasAnswered = (userAnswers[q.id] !== undefined);
+                const isCorrect = hasAnswered && (userAnswers[q.id] === q.correct);
+
+                if (!hasAnswered) {
+                    btn.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-300', 'hover:bg-fuchsia-100');
+                } else if (isCorrect) {
+                    btn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600', 'shadow-sm');
+                } else {
+                    btn.classList.add('bg-rose-500', 'text-white', 'border-rose-600', 'shadow-sm');
+                }
+
+                if (isCurrent) {
+                    btn.classList.add('ring-4', 'ring-fuchsia-400', 'ring-offset-1', 'scale-105', 'z-10');
+                }
+
+                btn.innerText = `${idx + 1}`;
+                btn.onclick = () => {
+                    currentIdx = idx;
+                    saveState();
+                    renderAll();
+                };
+
+                gridEl.appendChild(btn);
+            });
+        }
+
+        // Render Step Block
+        function renderStepBlock(title, subEq, calc1, calc2, res) {
+            return `
+                <div class="bg-white/90 p-4 sm:p-5 rounded-xl border border-fuchsia-200 space-y-2 font-mono text-xs sm:text-sm">
+                    <p class="font-sans font-bold text-fuchsia-950 border-b border-fuchsia-100 pb-2">
+                        ${title}
+                    </p>
+                    <div class="space-y-1.5 text-slate-800 pt-1">
+                        <div class="font-bold text-fuchsia-900 bg-fuchsia-50 p-2 rounded border border-fuchsia-200">
+                            &bull; $${subEq}$
+                        </div>
+                        <div>&bull; ${calc1}</div>
+                        <div>&bull; ${calc2}</div>
+                        <div class="text-base sm:text-lg font-bold text-emerald-700 pt-1">
+                            &rArr; ${res}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Active Question
+        function renderQuestionCard() {
+            const q = quizData[currentIdx];
+            const cardEl = document.getElementById('question-card');
+            const userChoice = userAnswers[q.id];
+            const isAnswered = (userChoice !== undefined);
+
+            const optLabels = ['A', 'B', 'C', 'D'];
+
+            let html = `
+                <!-- Question Header Banner -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-fuchsia-200 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 bg-fuchsia-600 text-white font-bold text-xs rounded-lg">
+                            ${q.category}
+                        </span>
+                        <h2 class="text-lg font-bold text-fuchsia-950">${q.title}</h2>
+                    </div>
+                    ${isAnswered ? (
+                        userChoice === q.correct ? 
+                        `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300 flex items-center gap-1.5 w-max">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Jawaban Benar!
+                         </span>` : 
+                        `<span class="bg-rose-100 text-rose-800 text-xs font-bold px-3 py-1 rounded-full border border-rose-300 flex items-center gap-1.5 w-max">
+                            <i class="fa-solid fa-circle-xmark text-rose-600"></i> Kurang Tepat
+                         </span>`
+                    ) : ''}
+                </div>
+
+                <!-- Story Context (if any) -->
+                ${q.story_context ? `
+                    <div class="p-3.5 bg-fuchsia-100/70 border border-fuchsia-300 rounded-xl text-xs sm:text-sm font-medium text-fuchsia-950 font-mono space-y-1">
+                        <div class="font-bold text-fuchsia-950 font-sans uppercase text-xs flex items-center gap-1">
+                            <i class="fa-solid fa-lightbulb text-fuchsia-600"></i> Informasi & Model Matematika:
+                        </div>
+                        <div class="whitespace-pre-line">${q.story_context}</div>
+                    </div>
+                ` : ''}
+
+                <!-- Question Text -->
+                <div class="text-base sm:text-lg text-slate-800 font-medium whitespace-pre-line leading-relaxed">
+                    ${q.question}
+                </div>
+
+                <!-- 4 Options Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            `;
+
+            q.options.forEach((optText, optIdx) => {
+                let btnStyle = "bg-white border-fuchsia-300 hover:bg-fuchsia-50 text-slate-800";
+                let badgeStyle = "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-300";
+
+                if (isAnswered) {
+                    if (optIdx === q.correct) {
+                        btnStyle = "bg-emerald-100 border-emerald-500 text-emerald-950 font-bold ring-2 ring-emerald-400";
+                        badgeStyle = "bg-emerald-500 text-white border-emerald-600";
+                    } else if (optIdx === userChoice) {
+                        btnStyle = "bg-rose-100 border-rose-500 text-rose-950 font-medium ring-2 ring-rose-400";
+                        badgeStyle = "bg-rose-500 text-white border-rose-600";
+                    } else {
+                        btnStyle = "bg-gray-50 border-gray-200 text-gray-400 opacity-60";
+                        badgeStyle = "bg-gray-200 text-gray-500 border-gray-300";
+                    }
+                }
+
+                html += `
+                    <button onclick="selectOption(${optIdx})" ${isAnswered ? 'disabled' : ''} class="p-4 rounded-xl border text-left text-xs sm:text-sm font-medium transition-all flex items-start gap-3 shadow-sm ${btnStyle}">
+                        <span class="w-7 h-7 rounded-lg border font-bold flex items-center justify-center shrink-0 ${badgeStyle}">
+                            ${optLabels[optIdx]}
+                        </span>
+                        <span class="mt-1">${optText}</span>
+                    </button>
+                `;
+            });
+
+            html += `</div>`;
+
+            // If Answered, show detailed step-by-step mixed method solution
+            if (isAnswered) {
+                html += `
+                    <div class="mt-6 pt-6 border-t border-fuchsia-200 space-y-4">
+                        <div class="flex items-center gap-2 text-sm font-bold text-fuchsia-950 uppercase">
+                            <i class="fa-solid fa-align-left text-fuchsia-600"></i> Pembahasan Langkah Metode Campuran:
+                        </div>
+
+                        <div class="paper-card p-5 sm:p-7 rounded-2xl border-2 border-dashed border-fuchsia-300 shadow-sm space-y-4">
+                            ${renderStepBlock(q.step1_title, q.step1_sub_eq, q.step1_calc1, q.step1_calc2, q.step1_res)}
+                            ${renderStepBlock(q.step2_title, q.step2_sub_eq, q.step2_calc1, q.step2_calc1, q.step2_res)}
+
+                            <!-- Final Result Banner -->
+                            <div class="p-3.5 bg-fuchsia-100 rounded-xl border border-fuchsia-300 text-center font-bold text-fuchsia-950 text-sm sm:text-base">
+                                Kesimpulan Himpunan Penyelesaian: <span class="underline text-rose-700 ml-1">${q.final_res}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            cardEl.innerHTML = html;
+
+            // Trigger MathJax typeset
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // Handle Option Selection
+        function selectOption(optIdx) {
+            const q = quizData[currentIdx];
+            if (userAnswers[q.id] !== undefined) return; // already answered
+
+            userAnswers[q.id] = optIdx;
+            saveState();
+            renderAll();
+        }
+
+        // Update Header Counter
+        function updateScoreboard() {
+            let answered = 0;
+            let score = 0;
+
+            quizData.forEach(q => {
+                if (userAnswers[q.id] !== undefined) {
+                    answered++;
+                    if (userAnswers[q.id] === q.correct) {
+                        score++;
+                    }
+                }
+            });
+
+            document.getElementById('answered-count').innerText = `${answered}`;
+            document.getElementById('score-count').innerText = `${score}`;
+
+            // Update Bottom Indicators
+            document.getElementById('question-indicator').innerText = `Soal ${currentIdx + 1} dari ${quizData.length}`;
+            document.getElementById('btn-prev').disabled = (currentIdx === 0);
+            document.getElementById('btn-prev').classList.toggle('opacity-50', currentIdx === 0);
+            
+            document.getElementById('btn-next').disabled = (currentIdx === quizData.length - 1);
+            document.getElementById('btn-next').classList.toggle('opacity-50', currentIdx === quizData.length - 1);
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                saveState();
+                renderAll();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIdx < quizData.length - 1) {
+                currentIdx++;
+                saveState();
+                renderAll();
+            }
+        }
+
+        function filterCategory(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+                btn.className = "px-2.5 py-1 rounded-lg bg-fuchsia-100 text-fuchsia-950 hover:bg-fuchsia-200 font-medium";
+            });
+            document.getElementById(`filter-${cat}`).className = "px-2.5 py-1 rounded-lg bg-fuchsia-600 text-white font-medium shadow-sm";
+            renderNavGrid();
+        }
+
+        function renderAll() {
+            renderNavGrid();
+            renderQuestionCard();
+            updateScoreboard();
+        }
+
+        // Initial Load
+        window.onload = function() {
+            loadSavedState();
+            renderAll();
+        };
+    </script>
+</body>
+</html>
